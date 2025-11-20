@@ -1,7 +1,7 @@
 # Character Generator - Plan de Développement
 
 ## Vue d'ensemble
-Développement du générateur de personnages South Park en 3 phases progressives. Chaque phase est 100% fonctionnelle et testable visuellement avant de passer à la suivante.
+Développement du générateur de personnages South Park en 2 phases progressives. Chaque phase est 100% fonctionnelle et testable visuellement avant de passer à la suivante.
 
 ---
 
@@ -466,1181 +466,558 @@ export default {
 
 ---
 
-## PHASE 2 - Variété & Personnalisation
+## PHASE 2 - Animation Dancing (POC)
 
 ### Objectif
-Augmenter drastiquement la variété des personnages et permettre la personnalisation après génération.
+Créer **UNE SEULE** animation dancing universelle qui fonctionne sur **N'IMPORTE QUEL** personnage généré, peu importe ses caractéristiques (forme de tête, cheveux, vêtements, etc.). Cette animation doit être déclenchée par **UN SIMPLE BOUTON "Animate"**.
+
+**Principe clé**: Grâce à l'architecture SVG unifiée de la Phase 1, tous les personnages ont les mêmes IDs fixes (`#head`, `#body`, `#leg-left`, etc.). On peut donc cibler ces IDs avec CSS pour créer une animation qui fonctionne sur 100% des personnages générés.
 
 ### Livrables
-- ✓ 8-10 variations par élément (cheveux, yeux, bouches, vêtements)
-- ✓ Système de customization
-- ✓ Accessoires (lunettes, chapeaux)
-- ✓ Export multi-formats (data-uri, JSON, React component)
-- ✓ Interface interactive de personnalisation
+- ✓ **UNE animation dancing** (balancement corps + mouvement tête + jambes alternées)
+- ✓ **UN bouton "Animate"** pour démarrer/arrêter l'animation
+- ✓ Animation **universelle** : fonctionne sur n'importe quel personnage
+- ✓ Page de démo interactive
 
 ### Tâches détaillées
 
-#### 2.1 - Extension des variations
+#### 2.1 - Création des animations CSS (`src/animations/dancing.css`)
 
-**Cheveux (`parts/hair.js`)** - Ajouter 6 styles supplémentaires:
-```javascript
-// Nouveaux styles (total: 10 styles)
-const newHairStyles = {
-  afro: { /* forme ronde volumineuse */ },
-  ponytail: { /* cheveux attachés derrière */ },
-  curly: { /* cheveux bouclés */ },
-  mohawk: { /* crête centrale */ },
-  pigtails: { /* deux couettes */ },
-  bob: { /* coupe au carré */ }
-};
-```
-
-**Couleurs cheveux** - Ajouter 6 couleurs fantaisie:
-```javascript
-const fantasyHairColors = [
-  '#FF1493',  // Rose
-  '#00CED1',  // Cyan
-  '#9370DB',  // Violet clair
-  '#32CD32',  // Vert
-  '#FF4500',  // Orange vif
-  '#FFD700'   // Or
-];
-```
-
-**Yeux (`parts/face.js`)** - Ajouter 5 types:
-```javascript
-// Total: 8 types d'yeux
-const newEyeTypes = {
-  closed: { /* lignes horizontales */ },
-  wink: { /* un oeil fermé, un ouvert */ },
-  angry: { /* sourcils froncés */ },
-  hearts: { /* yeux en forme de coeur */ },
-  stars: { /* yeux étoilés */ }
-};
-```
-
-**Bouches** - Ajouter 4 types:
-```javascript
-// Total: 8 types de bouches
-const newMouthTypes = {
-  laugh: { /* grande bouche ouverte avec langue */ },
-  surprised: { /* O rond */ },
-  smirk: { /* sourire en coin */ },
-  tongue: { /* langue qui sort */ }
-};
-```
-
-**Vêtements (`parts/clothing.js`)** - Ajouter 4 styles:
-```javascript
-// Total: 7 styles de hauts
-const newTopStyles = {
-  jacket: { /* veste avec col */ },
-  sweater: { /* pull avec motif */ },
-  polo: { /* polo avec col */ },
-  dress: { /* robe simple */ }
-};
-```
-
-**Couleurs vêtements secondaires**:
-```javascript
-// Pour détails (rayures, motifs, etc.)
-function generateClothing(style, primaryColor, secondaryColor) {
-  // Ajouter détails colorés selon le style
-}
-```
-
-#### 2.2 - Accessoires (`parts/accessories.js`)
-
-**Lunettes** - 4 styles:
-```javascript
-const glassesStyles = {
-  round: {
-    // Deux cercles avec pont
-    elements: [
-      { tag: 'circle', attrs: { cx: 85, cy: 75, r: 8, fill: 'none', stroke: '#000', strokeWidth: 2 } },
-      { tag: 'circle', attrs: { cx: 115, cy: 75, r: 8, fill: 'none', stroke: '#000', strokeWidth: 2 } },
-      { tag: 'line', attrs: { x1: 93, y1: 75, x2: 107, y2: 75, stroke: '#000', strokeWidth: 2 } }
-    ]
-  },
-  square: { /* lunettes carrées */ },
-  sunglasses: { /* verres noirs */ },
-  nerd: { /* grosses lunettes épaisses */ }
-};
-
-function generateGlasses(style) {
-  if (!style) return { id: 'glasses', elements: [] };
-  // Retourne le groupe <g id="glasses"> rempli
-}
-```
-
-**Chapeaux** - 6 styles:
-```javascript
-const hatStyles = {
-  cap: {
-    // Casquette avec visière
-  },
-  beanie: {
-    // Bonnet simple
-  },
-  tophat: {
-    // Haut-de-forme
-  },
-  baseball: {
-    // Casquette de baseball
-  },
-  santa: {
-    // Bonnet de Noël
-  },
-  crown: {
-    // Couronne simple
+**Animations dancing simples**:
+```css
+/* Animation principale - balancement du corps */
+@keyframes dance-bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
   }
-};
-
-function generateHat(style, color) {
-  if (!style) return { id: 'hat', elements: [] };
-  // Retourne le groupe <g id="hat"> rempli
-}
-```
-
-#### 2.3 - Système de personnalisation (`core/customizer.js`)
-
-```javascript
-/**
- * Modifie un personnage existant
- * @param {Object} character - Personnage à modifier
- * @param {Object} modifications - Modifications à appliquer
- * @returns {Object} - Nouveau personnage modifié
- */
-function customizeCharacter(character, modifications) {
-  // 1. Clone la config existante
-  const newConfig = deepClone(character.config);
-
-  // 2. Appliquer les modifications (merge profond)
-  if (modifications.hair) {
-    Object.assign(newConfig.hair, modifications.hair);
+  25% {
+    transform: translateY(-10px) rotate(-3deg);
   }
-  if (modifications.face) {
-    Object.assign(newConfig.face, modifications.face);
-  }
-  if (modifications.clothing) {
-    Object.assign(newConfig.clothing, modifications.clothing);
-  }
-  if (modifications.accessories) {
-    Object.assign(newConfig.accessories, modifications.accessories);
-  }
-
-  // 3. Reconstruire le SVG
-  const svg = buildSVG(newConfig);
-
-  // 4. Retourner le nouveau personnage
-  return {
-    id: generateId(),
-    seed: null,  // Plus de seed car personnalisé
-    config: newConfig,
-    svg: svgToString(svg),
-    timestamp: Date.now()
-  };
-}
-```
-
-**Exemple d'utilisation**:
-```javascript
-const char = generateCharacter({ seed: 'user123' });
-
-const customChar = customizeCharacter(char, {
-  hair: { style: 'afro', color: '#FF1493' },
-  accessories: {
-    glasses: 'sunglasses',
-    hat: 'cap'
-  }
-});
-```
-
-#### 2.4 - Export multi-formats (`core/exporter.js`)
-
-```javascript
-/**
- * Exporte un personnage dans différents formats
- * @param {Object} character - Personnage à exporter
- * @param {String} format - Format de sortie
- * @returns {String|Object} - Résultat selon le format
- */
-function exportCharacter(character, format = 'svg-string') {
-  switch (format) {
-    case 'svg-string':
-      return character.svg;
-
-    case 'svg-data-uri':
-      const encoded = encodeURIComponent(character.svg);
-      return `data:image/svg+xml,${encoded}`;
-
-    case 'json':
-      return JSON.stringify({
-        config: character.config,
-        timestamp: character.timestamp
-      }, null, 2);
-
-    case 'react-component':
-      return generateReactComponent(character);
-
-    default:
-      throw new Error(`Unknown format: ${format}`);
+  75% {
+    transform: translateY(-10px) rotate(3deg);
   }
 }
 
-/**
- * Génère un composant React
- */
-function generateReactComponent(character) {
-  const svgContent = character.svg
-    .replace(/xmlns="[^"]*"/g, '')
-    .replace(/class=/g, 'className=')
-    .replace(/stroke-width=/g, 'strokeWidth=');
-
-  return `
-import React from 'react';
-
-const Character = () => (
-  ${svgContent}
-);
-
-export default Character;
-`.trim();
+/* Animation de la tête - hochement */
+@keyframes head-bob {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(2deg);
+  }
 }
 
-/**
- * Regénère un personnage depuis sa config
- */
-function generateFromConfig(config) {
-  const svg = buildSVG(config);
-  return {
-    id: generateId(),
-    seed: null,
-    config: config,
-    svg: svgToString(svg),
-    timestamp: Date.now()
-  };
+/* Animation des jambes - alternance */
+@keyframes leg-left-kick {
+  0%, 100% {
+    transform: rotate(0deg);
+    transform-origin: 90px 200px;
+  }
+  50% {
+    transform: rotate(-10deg);
+    transform-origin: 90px 200px;
+  }
+}
+
+@keyframes leg-right-kick {
+  0%, 100% {
+    transform: rotate(0deg);
+    transform-origin: 110px 200px;
+  }
+  50% {
+    transform: rotate(10deg);
+    transform-origin: 110px 200px;
+  }
+}
+
+/* Animation des cheveux - mouvement */
+@keyframes hair-sway {
+  0%, 100% {
+    transform: rotate(0deg);
+    transform-origin: 100px 50px;
+  }
+  50% {
+    transform: rotate(5deg);
+    transform-origin: 100px 50px;
+  }
+}
+
+/* Classes à appliquer pour déclencher les animations */
+.character-root.dancing {
+  animation: dance-bounce 0.6s ease-in-out infinite;
+}
+
+.character-root.dancing .head {
+  animation: head-bob 0.4s ease-in-out infinite;
+}
+
+.character-root.dancing #leg-left {
+  animation: leg-left-kick 0.6s ease-in-out infinite;
+}
+
+.character-root.dancing #leg-right {
+  animation: leg-right-kick 0.6s ease-in-out infinite 0.3s;
+}
+
+.character-root.dancing .hair {
+  animation: hair-sway 0.5s ease-in-out infinite;
 }
 ```
 
-#### 2.5 - Interface de personnalisation (`demo/phase2-customizer.html`)
+#### 2.2 - Implémentation du bouton "Animate" (dans la page de démo)
 
-**Fonctionnalités**:
-- Affichage grand format du personnage
-- Sélecteurs pour chaque caractéristique:
-  - Forme de tête (radio buttons)
-  - Couleur de peau (color picker ou palette)
-  - Style de cheveux (dropdown)
-  - Couleur de cheveux (color picker)
-  - Type d'yeux (dropdown)
-  - Type de bouche (dropdown)
-  - Style de vêtements (dropdown)
-  - Couleur de vêtements (color picker)
-  - Lunettes (dropdown avec "aucune")
-  - Chapeau (dropdown avec "aucun")
-- Boutons d'export:
-  - Download SVG
-  - Copy Data URI
-  - Copy JSON config
-  - Copy React Component
-- Bouton "Random" pour générer aléatoirement
+**Principe**: Ajouter/retirer la classe CSS `.dancing` sur le groupe `.character-root`
 
-**Structure HTML**:
+**Code simple**:
+```javascript
+// Toggle l'animation au clic du bouton
+function toggleAnimation() {
+  const root = document.querySelector('.character-root');
+  if (root) {
+    root.classList.toggle('dancing');
+  }
+}
+```
+
+C'est tout ! Grâce aux IDs fixes, l'animation CSS cible automatiquement les bons éléments.
+
+#### 2.3 - Mise à jour de la page de démo (`demo/phase2-animation.html`)
+
+**Nouvelle page de démo avec animation**:
+
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Character Customizer - Phase 2</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Character Generator - Phase 2 Animation</title>
+
+  <!-- Styles de base -->
   <style>
-    .container {
-      display: flex;
-      gap: 40px;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       padding: 20px;
+      color: #333;
     }
-    .preview {
-      flex: 0 0 300px;
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #667eea;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
     .controls {
-      flex: 1;
-      display: grid;
+      display: flex;
       gap: 15px;
+      justify-content: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
     }
-    .control-group {
-      border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 5px;
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
     }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-animate {
+      background: #FF6B6B;
+      color: white;
+      font-size: 18px;
+    }
+
+    .btn-animate:hover {
+      background: #EE5A52;
+      transform: scale(1.05);
+    }
+
+    .btn-animate.active {
+      background: #51CF66;
+    }
+
+    .main-display {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 40px;
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+
+    .character-container {
+      background: white;
+      border: 3px solid #333;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
     .character-display {
       width: 300px;
       height: 450px;
-      border: 2px solid #000;
-      background: #f0f0f0;
     }
-    .export-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
+
+    .info {
+      background: #E3F2FD;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #2196F3;
+      margin-bottom: 20px;
+    }
+
+    .info h3 {
+      margin-bottom: 10px;
+      color: #1976D2;
+    }
+
+    .info p {
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .gallery-item {
+      background: white;
+      border: 2px solid #333;
+      border-radius: 8px;
+      padding: 10px;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+
+    .gallery-item:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .gallery-character {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 2/3;
+    }
+  </style>
+
+  <!-- Animations CSS -->
+  <style>
+    /* Animation principale - balancement du corps */
+    @keyframes dance-bounce {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg);
+      }
+      25% {
+        transform: translateY(-10px) rotate(-3deg);
+      }
+      75% {
+        transform: translateY(-10px) rotate(3deg);
+      }
+    }
+
+    /* Animation de la tête - hochement */
+    @keyframes head-bob {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-5px) rotate(2deg);
+      }
+    }
+
+    /* Animation des jambes - alternance */
+    @keyframes leg-left-kick {
+      0%, 100% {
+        transform: rotate(0deg);
+      }
+      50% {
+        transform: rotate(-10deg);
+      }
+    }
+
+    @keyframes leg-right-kick {
+      0%, 100% {
+        transform: rotate(0deg);
+      }
+      50% {
+        transform: rotate(10deg);
+      }
+    }
+
+    /* Animation des cheveux - mouvement */
+    @keyframes hair-sway {
+      0%, 100% {
+        transform: rotate(0deg);
+      }
+      50% {
+        transform: rotate(5deg);
+      }
+    }
+
+    /* Classes à appliquer pour déclencher les animations */
+    .character-root.dancing {
+      animation: dance-bounce 0.6s ease-in-out infinite;
+    }
+
+    .character-root.dancing .head {
+      animation: head-bob 0.4s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .character-root.dancing #leg-left {
+      animation: leg-left-kick 0.6s ease-in-out infinite;
+      transform-origin: 90px 200px;
+    }
+
+    .character-root.dancing #leg-right {
+      animation: leg-right-kick 0.6s ease-in-out infinite 0.3s;
+      transform-origin: 110px 200px;
+    }
+
+    .character-root.dancing .hair {
+      animation: hair-sway 0.5s ease-in-out infinite;
+      transform-origin: 100px 50px;
     }
   </style>
 </head>
 <body>
-  <h1>Character Customizer - Phase 2</h1>
-
   <div class="container">
-    <div class="preview">
-      <div id="characterDisplay" class="character-display"></div>
-      <div class="export-buttons">
-        <button onclick="downloadSVG()">Download SVG</button>
-        <button onclick="copyDataURI()">Copy Data URI</button>
-        <button onclick="copyJSON()">Copy JSON</button>
-        <button onclick="copyReact()">Copy React</button>
-      </div>
-      <button onclick="randomize()" style="width: 100%; margin-top: 10px;">
-        🎲 Randomize All
-      </button>
+    <h1>Character Generator - Phase 2</h1>
+    <p class="subtitle">Dancing Animation POC</p>
+
+    <div class="info">
+      <h3>🎵 Comment ça marche ?</h3>
+      <p>
+        Grâce à l'architecture SVG unifiée de la Phase 1, tous les personnages ont les mêmes IDs et la même structure.
+        Cela permet d'appliquer les mêmes animations CSS à n'importe quel personnage généré !
+        <br><br>
+        <strong>Cliquez sur "🎉 Animate" pour faire danser le personnage !</strong>
+      </p>
     </div>
 
     <div class="controls">
-      <div class="control-group">
-        <h3>Head</h3>
-        <label>Shape:</label>
-        <select id="headShape" onchange="updateCharacter()">
-          <option value="round">Round</option>
-          <option value="oval">Oval</option>
-          <option value="square">Square</option>
-        </select>
-        <label>Skin Tone:</label>
-        <select id="skinTone" onchange="updateCharacter()">
-          <option value="0">Light</option>
-          <option value="1">Light-Medium</option>
-          <option value="2">Medium</option>
-          <option value="3">Medium-Dark</option>
-          <option value="4">Dark</option>
-          <option value="5">Very Dark</option>
-        </select>
-      </div>
+      <button class="btn-primary" onclick="generateRandom()">
+        🎲 Generate Random
+      </button>
+      <button class="btn-animate" id="animateBtn" onclick="toggleAnimation()">
+        🎉 Animate
+      </button>
+    </div>
 
-      <div class="control-group">
-        <h3>Hair</h3>
-        <label>Style:</label>
-        <select id="hairStyle" onchange="updateCharacter()">
-          <option value="short">Short</option>
-          <option value="spiky">Spiky</option>
-          <option value="long">Long</option>
-          <option value="bald">Bald</option>
-          <option value="afro">Afro</option>
-          <option value="ponytail">Ponytail</option>
-          <option value="curly">Curly</option>
-          <option value="mohawk">Mohawk</option>
-          <option value="pigtails">Pigtails</option>
-          <option value="bob">Bob</option>
-        </select>
-        <label>Color:</label>
-        <input type="color" id="hairColor" onchange="updateCharacter()" />
-      </div>
-
-      <div class="control-group">
-        <h3>Face</h3>
-        <label>Eyes:</label>
-        <select id="eyeType" onchange="updateCharacter()">
-          <option value="normal">Normal</option>
-          <option value="happy">Happy</option>
-          <option value="surprised">Surprised</option>
-          <option value="closed">Closed</option>
-          <option value="wink">Wink</option>
-          <option value="angry">Angry</option>
-          <option value="hearts">Hearts</option>
-          <option value="stars">Stars</option>
-        </select>
-        <label>Mouth:</label>
-        <select id="mouthType" onchange="updateCharacter()">
-          <option value="neutral">Neutral</option>
-          <option value="smile">Smile</option>
-          <option value="sad">Sad</option>
-          <option value="open">Open</option>
-          <option value="laugh">Laugh</option>
-          <option value="surprised">Surprised</option>
-          <option value="smirk">Smirk</option>
-          <option value="tongue">Tongue Out</option>
-        </select>
-      </div>
-
-      <div class="control-group">
-        <h3>Clothing</h3>
-        <label>Style:</label>
-        <select id="clothingStyle" onchange="updateCharacter()">
-          <option value="tshirt">T-Shirt</option>
-          <option value="hoodie">Hoodie</option>
-          <option value="vest">Vest</option>
-          <option value="jacket">Jacket</option>
-          <option value="sweater">Sweater</option>
-          <option value="polo">Polo</option>
-          <option value="dress">Dress</option>
-        </select>
-        <label>Color:</label>
-        <input type="color" id="clothingColor" onchange="updateCharacter()" />
-      </div>
-
-      <div class="control-group">
-        <h3>Accessories</h3>
-        <label>Glasses:</label>
-        <select id="glasses" onchange="updateCharacter()">
-          <option value="">None</option>
-          <option value="round">Round</option>
-          <option value="square">Square</option>
-          <option value="sunglasses">Sunglasses</option>
-          <option value="nerd">Nerd Glasses</option>
-        </select>
-        <label>Hat:</label>
-        <select id="hat" onchange="updateCharacter()">
-          <option value="">None</option>
-          <option value="cap">Cap</option>
-          <option value="beanie">Beanie</option>
-          <option value="tophat">Top Hat</option>
-          <option value="baseball">Baseball Cap</option>
-          <option value="santa">Santa Hat</option>
-          <option value="crown">Crown</option>
-        </select>
+    <div class="main-display">
+      <div class="character-container">
+        <div id="mainCharacter" class="character-display"></div>
       </div>
     </div>
+
+    <h2 style="text-align: center; margin: 30px 0 20px; color: #667eea;">
+      Gallery - Click to animate any character!
+    </h2>
+    <div id="gallery" class="gallery"></div>
   </div>
 
   <script type="module">
-    import { generateCharacter, customizeCharacter, exportCharacter } from '../src/index.js';
+    import { generateCharacter } from '../src/index.js';
 
-    let currentCharacter = generateCharacter();
-    displayCharacter();
+    let currentCharacter = null;
+    let isAnimating = false;
 
-    function updateCharacter() {
-      const modifications = {
-        head: {
-          shape: document.getElementById('headShape').value,
-          skinTone: parseInt(document.getElementById('skinTone').value)
-        },
-        hair: {
-          style: document.getElementById('hairStyle').value,
-          color: document.getElementById('hairColor').value
-        },
-        face: {
-          eyes: document.getElementById('eyeType').value,
-          mouth: document.getElementById('mouthType').value
-        },
-        clothing: {
-          top: {
-            style: document.getElementById('clothingStyle').value,
-            color: document.getElementById('clothingColor').value
-          }
-        },
-        accessories: {
-          glasses: document.getElementById('glasses').value || null,
-          hat: document.getElementById('hat').value || null
-        }
-      };
-
-      currentCharacter = customizeCharacter(currentCharacter, modifications);
-      displayCharacter();
-    }
-
-    function displayCharacter() {
-      document.getElementById('characterDisplay').innerHTML = currentCharacter.svg;
-      // Sync controls with current character
-      syncControls();
-    }
-
-    function syncControls() {
-      const config = currentCharacter.config;
-      document.getElementById('headShape').value = config.head.shape;
-      document.getElementById('skinTone').value = config.head.skinTone;
-      document.getElementById('hairStyle').value = config.hair.style;
-      document.getElementById('hairColor').value = config.hair.color;
-      // etc...
-    }
-
-    function randomize() {
+    // Génération aléatoire
+    window.generateRandom = function() {
       currentCharacter = generateCharacter();
-      displayCharacter();
+      displayCharacter(currentCharacter);
+      // Réinitialiser l'état du bouton
+      isAnimating = false;
+      updateAnimateButton();
+    };
+
+    // Affichage du personnage
+    function displayCharacter(char) {
+      const container = document.getElementById('mainCharacter');
+      container.innerHTML = char.svg;
     }
 
-    window.updateCharacter = updateCharacter;
-    window.randomize = randomize;
-    window.downloadSVG = () => {
-      const blob = new Blob([currentCharacter.svg], { type: 'image/svg+xml' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `character-${Date.now()}.svg`;
-      a.click();
+    // Toggle animation
+    window.toggleAnimation = function() {
+      const container = document.getElementById('mainCharacter');
+      const root = container.querySelector('.character-root');
+
+      if (root) {
+        isAnimating = !isAnimating;
+        if (isAnimating) {
+          root.classList.add('dancing');
+        } else {
+          root.classList.remove('dancing');
+        }
+        updateAnimateButton();
+      }
     };
-    window.copyDataURI = () => {
-      const dataUri = exportCharacter(currentCharacter, 'svg-data-uri');
-      navigator.clipboard.writeText(dataUri);
-      alert('Data URI copied!');
-    };
-    window.copyJSON = () => {
-      const json = exportCharacter(currentCharacter, 'json');
-      navigator.clipboard.writeText(json);
-      alert('JSON config copied!');
-    };
-    window.copyReact = () => {
-      const react = exportCharacter(currentCharacter, 'react-component');
-      navigator.clipboard.writeText(react);
-      alert('React component copied!');
-    };
+
+    // Mise à jour du bouton
+    function updateAnimateButton() {
+      const btn = document.getElementById('animateBtn');
+      if (isAnimating) {
+        btn.classList.add('active');
+        btn.textContent = '⏸️ Stop Dancing';
+      } else {
+        btn.classList.remove('active');
+        btn.textContent = '🎉 Animate';
+      }
+    }
+
+    // Génération de la galerie
+    function generateGallery() {
+      const gallery = document.getElementById('gallery');
+      gallery.innerHTML = '';
+
+      for (let i = 0; i < 6; i++) {
+        const seed = `demo-${i}`;
+        const char = generateCharacter({ seed });
+
+        const item = document.createElement('div');
+        item.className = 'gallery-item';
+
+        // Click pour afficher + animer
+        item.onclick = () => {
+          currentCharacter = char;
+          displayCharacter(char);
+
+          // Auto-démarrer l'animation
+          setTimeout(() => {
+            const container = document.getElementById('mainCharacter');
+            const root = container.querySelector('.character-root');
+            if (root) {
+              root.classList.add('dancing');
+              isAnimating = true;
+              updateAnimateButton();
+            }
+          }, 100);
+        };
+
+        const charDiv = document.createElement('div');
+        charDiv.className = 'gallery-character';
+        charDiv.innerHTML = char.svg;
+
+        item.appendChild(charDiv);
+        gallery.appendChild(item);
+
+        // Hover pour preview animation
+        item.addEventListener('mouseenter', () => {
+          const root = charDiv.querySelector('.character-root');
+          if (root) root.classList.add('dancing');
+        });
+
+        item.addEventListener('mouseleave', () => {
+          const root = charDiv.querySelector('.character-root');
+          if (root) root.classList.remove('dancing');
+        });
+      }
+    }
+
+    // Initialisation
+    generateRandom();
+    generateGallery();
   </script>
 </body>
 </html>
-```
-
-#### 2.6 - Mise à jour de `index.js`
-
-```javascript
-import { generateCharacter } from './core/generator.js';
-import { customizeCharacter } from './core/customizer.js';
-import { exportCharacter, generateFromConfig } from './core/exporter.js';
-
-export {
-  generateCharacter,
-  customizeCharacter,
-  exportCharacter,
-  generateFromConfig
-};
-
-export default {
-  generateCharacter,
-  customizeCharacter,
-  exportCharacter,
-  generateFromConfig
-};
 ```
 
 ### Critères de succès Phase 2
 
-**Vérifications visuelles**:
-- [ ] Ouvrir `demo/phase2-customizer.html`
-- [ ] Changer chaque option et voir le personnage se mettre à jour
-- [ ] Au moins 10 styles de cheveux disponibles
-- [ ] Au moins 8 types d'yeux et 8 types de bouches
-- [ ] Les accessoires (lunettes, chapeaux) s'affichent correctement
-- [ ] Les accessoires peuvent être retirés (option "None")
-- [ ] Bouton "Randomize" génère des personnages variés
-- [ ] Tous les boutons d'export fonctionnent
-- [ ] Download SVG télécharge un fichier valide
-- [ ] Data URI fonctionne dans une balise `<img>`
-- [ ] JSON config peut être utilisé pour régénérer le personnage
-- [ ] React component est du JSX valide
+**TEST PRINCIPAL - Animation universelle**:
+- [ ] Générer 5 personnages différents (différentes têtes, cheveux, vêtements)
+- [ ] Cliquer sur "Animate" pour chacun
+- [ ] **VALIDATION**: La même animation fonctionne parfaitement sur TOUS les personnages
+- [ ] Aucun personnage ne nécessite d'ajustement CSS spécifique
 
-**Caractéristiques techniques**:
-- [ ] Structure SVG toujours identique malgré les variations
-- [ ] Accessoires non utilisés ont un groupe vide ou opacity:0
-- [ ] Performance fluide lors du changement d'options
-- [ ] Cohérence des couleurs (pas de combinaisons horribles)
+**Vérifications visuelles**:
+- [ ] Ouvrir `demo/phase2-animation.html` dans un navigateur
+- [ ] UN bouton "Animate" est visible
+- [ ] Clic sur "Animate" → le personnage danse (corps balance, tête bouge, jambes alternent)
+- [ ] Re-clic sur "Animate" → l'animation s'arrête
+- [ ] Générer un nouveau personnage aléatoire → cliquer "Animate" → ça marche !
+- [ ] L'animation est fluide et fun
+
+**Validation technique**:
+- [ ] La classe `.dancing` appliquée à `.character-root` active l'animation
+- [ ] Les animations CSS utilisent les IDs fixes : `#leg-left`, `#leg-right`, `.head`, `.hair`
+- [ ] **ZÉRO code JavaScript spécifique par personnage** (tout est CSS générique)
+- [ ] Performance 60fps
+- [ ] Aucune erreur console
 
 ---
 
-## PHASE 3 - Optimisation & Production
+## Résumé des Phases
 
-### Objectif
-Optimiser les performances, préparer l'intégration React, et créer une démo finale type "Dancing Room".
-
-### Livrables
-- ✓ Optimisations performance (<50ms, <10KB)
-- ✓ Génération batch efficace (20+ personnages)
-- ✓ Composants React prêts pour l'intégration
-- ✓ Démo finale type "galerie animée"
-- ✓ Documentation API complète
-- ✓ Package NPM-ready
-
-### Tâches détaillées
-
-#### 3.1 - Optimisations de performance
-
-**Caching des templates**:
-```javascript
-// Cache des structures SVG pré-construites
-const templateCache = new Map();
-
-function getCachedTemplate(key) {
-  if (!templateCache.has(key)) {
-    templateCache.set(key, buildTemplate(key));
-  }
-  return templateCache.get(key);
-}
-```
-
-**Optimisation de la construction SVG**:
-```javascript
-// Au lieu de construire string par string
-// Utiliser un builder optimisé avec array join
-class FastSVGBuilder {
-  constructor() {
-    this.parts = [];
-  }
-
-  add(element) {
-    this.parts.push(element);
-  }
-
-  build() {
-    return this.parts.join('');
-  }
-}
-```
-
-**Minification du SVG**:
-```javascript
-function minifySVG(svg) {
-  return svg
-    .replace(/\s+/g, ' ')           // Condenser les espaces
-    .replace(/>\s+</g, '><')        // Supprimer espaces entre tags
-    .replace(/\s*=\s*/g, '=')       // Supprimer espaces autour de =
-    .replace(/"\s+/g, '"')          // Supprimer espaces après "
-    .trim();
-}
-```
-
-**Pool d'objets pour génération batch**:
-```javascript
-/**
- * Génère plusieurs personnages en batch (plus efficace)
- */
-function generateCharacterBatch(count, options = {}) {
-  const characters = [];
-  const baseConfig = options.baseConfig || {};
-
-  // Pré-allocation
-  characters.length = count;
-
-  for (let i = 0; i < count; i++) {
-    const seed = options.seedPrefix ? `${options.seedPrefix}-${i}` : null;
-    characters[i] = generateCharacter({
-      ...options,
-      seed
-    });
-  }
-
-  return characters;
-}
-```
-
-#### 3.2 - Composants React (`src/react/`)
-
-**`CharacterDisplay.jsx`**:
-```jsx
-import React from 'react';
-
-/**
- * Composant d'affichage simple d'un personnage
- */
-export const CharacterDisplay = ({ character, size = 200, onClick }) => {
-  return (
-    <div
-      className="character-display"
-      style={{ width: size, height: size * 1.5 }}
-      onClick={onClick}
-      dangerouslySetInnerHTML={{ __html: character.svg }}
-    />
-  );
-};
-```
-
-**`CharacterAvatar.jsx`**:
-```jsx
-import React, { useMemo } from 'react';
-import { generateCharacter } from '../core/generator.js';
-
-/**
- * Avatar généré automatiquement à partir d'un seed
- */
-export const CharacterAvatar = ({
-  userId,
-  size = 50,
-  onClick
-}) => {
-  const character = useMemo(() => {
-    return generateCharacter({ seed: userId });
-  }, [userId]);
-
-  return (
-    <CharacterDisplay
-      character={character}
-      size={size}
-      onClick={onClick}
-    />
-  );
-};
-```
-
-**`CharacterCustomizer.jsx`**:
-```jsx
-import React, { useState } from 'react';
-import { generateCharacter, customizeCharacter } from '../index.js';
-
-/**
- * Composant complet de personnalisation
- */
-export const CharacterCustomizer = ({
-  initialCharacter,
-  onSave
-}) => {
-  const [character, setCharacter] = useState(
-    initialCharacter || generateCharacter()
-  );
-
-  const handleModify = (modifications) => {
-    const updated = customizeCharacter(character, modifications);
-    setCharacter(updated);
-  };
-
-  return (
-    <div className="character-customizer">
-      <div className="preview">
-        <CharacterDisplay character={character} size={300} />
-      </div>
-      <div className="controls">
-        {/* Tous les contrôles de la phase 2 */}
-      </div>
-      <button onClick={() => onSave(character)}>
-        Save Character
-      </button>
-    </div>
-  );
-};
-```
-
-**`DancingRoom.jsx`** - Composant de démo:
-```jsx
-import React, { useState, useEffect } from 'react';
-import { generateCharacterBatch } from '../core/generator.js';
-
-/**
- * Simulation de la Dancing Room avec plusieurs personnages
- */
-export const DancingRoom = ({ count = 20 }) => {
-  const [characters, setCharacters] = useState([]);
-
-  useEffect(() => {
-    // Générer les personnages au montage
-    const chars = generateCharacterBatch(count, {
-      seedPrefix: 'dancer'
-    });
-    setCharacters(chars);
-  }, [count]);
-
-  return (
-    <div className="dancing-room">
-      {characters.map((char, idx) => (
-        <div
-          key={idx}
-          className="dancer"
-          style={{
-            // Positionnement aléatoire
-            left: `${(idx % 5) * 20}%`,
-            top: `${Math.floor(idx / 5) * 25}%`
-          }}
-        >
-          <CharacterDisplay character={char} size={100} />
-        </div>
-      ))}
-    </div>
-  );
-};
-```
-
-#### 3.3 - Hooks React utilitaires (`src/react/hooks.js`)
-
-```javascript
-import { useState, useCallback, useMemo } from 'react';
-import { generateCharacter, customizeCharacter } from '../index.js';
-
-/**
- * Hook pour gérer un personnage avec état
- */
-export function useCharacter(initialOptions = {}) {
-  const [character, setCharacter] = useState(() =>
-    generateCharacter(initialOptions)
-  );
-
-  const regenerate = useCallback((options = {}) => {
-    setCharacter(generateCharacter(options));
-  }, []);
-
-  const customize = useCallback((modifications) => {
-    setCharacter(current => customizeCharacter(current, modifications));
-  }, []);
-
-  return {
-    character,
-    regenerate,
-    customize
-  };
-}
-
-/**
- * Hook pour générer un avatar à partir d'un userId
- */
-export function useCharacterAvatar(userId) {
-  return useMemo(() => {
-    return generateCharacter({ seed: userId });
-  }, [userId]);
-}
-
-/**
- * Hook pour générer plusieurs personnages
- */
-export function useCharacterBatch(count, seedPrefix = 'batch') {
-  return useMemo(() => {
-    return Array.from({ length: count }, (_, i) =>
-      generateCharacter({ seed: `${seedPrefix}-${i}` })
-    );
-  }, [count, seedPrefix]);
-}
-```
-
-#### 3.4 - Démo finale (`demo/phase3-dancing-room.html`)
-
-**Fonctionnalités**:
-- Affichage de 20+ personnages simultanés
-- Animation CSS simple (bounce, sway)
-- Génération performante (mesure du temps)
-- Contrôle du nombre de personnages (slider)
-- Bouton "Regenerate All"
-- Statistiques de performance
-- Grid responsive
-
-**Structure**:
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Dancing Room Demo - Phase 3</title>
-  <style>
-    .dancing-room {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 20px;
-      padding: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 80vh;
-    }
-
-    .dancer {
-      animation: dance 2s ease-in-out infinite;
-    }
-
-    .dancer:nth-child(even) {
-      animation-delay: 0.5s;
-    }
-
-    @keyframes dance {
-      0%, 100% { transform: translateY(0) rotate(-2deg); }
-      50% { transform: translateY(-10px) rotate(2deg); }
-    }
-
-    .character-display {
-      width: 100%;
-      height: auto;
-      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
-    }
-
-    .controls {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      z-index: 100;
-    }
-
-    .stats {
-      margin-top: 15px;
-      font-size: 12px;
-      color: #666;
-    }
-  </style>
-</head>
-<body>
-  <div class="controls">
-    <h3>Dancing Room Controls</h3>
-    <label>
-      Number of dancers: <span id="countDisplay">20</span>
-      <input
-        type="range"
-        id="dancerCount"
-        min="5"
-        max="50"
-        value="20"
-        onchange="updateCount()"
-      />
-    </label>
-    <button onclick="regenerateAll()">🔄 Regenerate All</button>
-
-    <div class="stats">
-      <div>Total dancers: <strong id="totalDancers">0</strong></div>
-      <div>Generation time: <strong id="genTime">0</strong>ms</div>
-      <div>Avg per character: <strong id="avgTime">0</strong>ms</div>
-      <div>Total SVG size: <strong id="totalSize">0</strong>KB</div>
-    </div>
-  </div>
-
-  <div id="dancingRoom" class="dancing-room"></div>
-
-  <script type="module">
-    import { generateCharacterBatch } from '../src/core/generator.js';
-
-    let currentCount = 20;
-
-    function renderDancers(count) {
-      const room = document.getElementById('dancingRoom');
-      room.innerHTML = '';
-
-      // Mesure de performance
-      const startTime = performance.now();
-
-      const characters = generateCharacterBatch(count, {
-        seedPrefix: 'dancer'
-      });
-
-      const endTime = performance.now();
-      const generationTime = endTime - startTime;
-
-      // Affichage
-      characters.forEach(char => {
-        const div = document.createElement('div');
-        div.className = 'dancer';
-        div.innerHTML = `<div class="character-display">${char.svg}</div>`;
-        room.appendChild(div);
-      });
-
-      // Stats
-      const totalSize = characters.reduce((sum, char) =>
-        sum + new Blob([char.svg]).size, 0
-      );
-
-      document.getElementById('totalDancers').textContent = count;
-      document.getElementById('genTime').textContent = generationTime.toFixed(2);
-      document.getElementById('avgTime').textContent = (generationTime / count).toFixed(2);
-      document.getElementById('totalSize').textContent = (totalSize / 1024).toFixed(2);
-
-      // Vérifier les contraintes
-      const avgTime = generationTime / count;
-      if (avgTime > 50) {
-        console.warn(`⚠️ Performance warning: ${avgTime.toFixed(2)}ms per character (target: <50ms)`);
-      }
-      if (totalSize / count > 10240) {
-        console.warn(`⚠️ Size warning: ${(totalSize / count / 1024).toFixed(2)}KB per character (target: <10KB)`);
-      }
-    }
-
-    function updateCount() {
-      currentCount = parseInt(document.getElementById('dancerCount').value);
-      document.getElementById('countDisplay').textContent = currentCount;
-      renderDancers(currentCount);
-    }
-
-    function regenerateAll() {
-      renderDancers(currentCount);
-    }
-
-    window.updateCount = updateCount;
-    window.regenerateAll = regenerateAll;
-
-    // Génération initiale
-    renderDancers(currentCount);
-  </script>
-</body>
-</html>
-```
-
-#### 3.5 - Documentation API (`docs/API.md`)
-
-Créer une documentation complète avec:
-- Installation et setup
-- API reference pour chaque fonction
-- Exemples d'utilisation
-- Guide d'intégration React
-- FAQ et troubleshooting
-
-#### 3.6 - Package preparation
-
-**`package.json`**:
-```json
-{
-  "name": "@sunodj/character-generator",
-  "version": "1.0.0",
-  "description": "South Park style character generator for Sunodj Dancing Room",
-  "main": "src/index.js",
-  "module": "src/index.js",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.js",
-    "./react": "./src/react/index.js"
-  },
-  "keywords": ["character", "avatar", "svg", "south-park", "generator"],
-  "author": "Sunodj Team",
-  "license": "MIT"
-}
-```
-
-**`README.md`** du module:
-```markdown
-# Character Generator
-
-South Park style character generator for Sunodj Dancing Room.
-
-## Installation
-
-\`\`\`bash
-npm install @sunodj/character-generator
-\`\`\`
-
-## Quick Start
-
-\`\`\`javascript
-import { generateCharacter } from '@sunodj/character-generator';
-
-const character = generateCharacter();
-console.log(character.svg); // SVG string
-\`\`\`
-
-## React Integration
-
-\`\`\`jsx
-import { CharacterAvatar } from '@sunodj/character-generator/react';
-
-function App() {
-  return <CharacterAvatar userId="user123" size={100} />;
-}
-\`\`\`
-
-## Documentation
-
-See [API.md](./docs/API.md) for complete documentation.
-```
-
-### Critères de succès Phase 3
-
-**Vérifications visuelles**:
-- [ ] Ouvrir `demo/phase3-dancing-room.html`
-- [ ] 20 personnages s'affichent correctement
-- [ ] Animation CSS fonctionne (bounce)
-- [ ] Slider change le nombre de personnages dynamiquement
-- [ ] Bouton "Regenerate All" fonctionne
-- [ ] Statistiques de performance affichées
-- [ ] Grid responsive s'adapte à la taille de l'écran
-
-**Vérifications de performance**:
-- [ ] Génération de 20 personnages < 1000ms total (50ms par personnage)
-- [ ] Chaque SVG < 10KB
-- [ ] Pas de lag lors de la régénération
-- [ ] Console sans warnings de performance
-
-**Vérifications techniques**:
-- [ ] Composants React fonctionnent (test dans app principale)
-- [ ] Hooks React utilisables
-- [ ] Package.json correct
-- [ ] Documentation complète
-- [ ] Tous les exports fonctionnels
-- [ ] Module importable dans projet React
-
-**Intégration finale**:
-- [ ] Import dans l'app Sunodj principale fonctionne
-- [ ] Peut générer des avatars utilisateurs
-- [ ] Peut créer une Dancing Room avec 20+ personnages
-- [ ] Performance acceptable en production
-
----
-
-## Résumé des 3 Phases
-
-### Phase 1 - Fondations (Temps estimé: Simple et rapide)
+### Phase 1 - Fondations ✅
 **Objectif**: Structure SVG solide + génération de base
 **Livrable**: Générateur minimal fonctionnel avec 3-4 variations
 **Test**: `demo/phase1-demo.html` - 9 personnages générés avec seed
 
-### Phase 2 - Expansion (Temps estimé: Moyen)
-**Objectif**: Variété maximale + personnalisation
-**Livrable**: Interface de customization complète + 8-10 variations
-**Test**: `demo/phase2-customizer.html` - Interface interactive
-
-### Phase 3 - Production (Temps estimé: Moyen)
-**Objectif**: Performance + intégration React
-**Livrable**: Package prêt pour l'app + démo Dancing Room
-**Test**: `demo/phase3-dancing-room.html` - 20+ personnages animés
+### Phase 2 - Animation Dancing 🎵
+**Objectif**: UNE animation dancing universelle
+**Livrable**: UN bouton "Animate" + UNE danse qui fonctionne sur 100% des personnages
+**Test**: `demo/phase2-animation.html` - Générer plusieurs personnages, tous dansent avec la même animation
 
 ---
 
 ## Notes Importantes
 
-### Principes à respecter ABSOLUMENT
+### Architecture SVG Unifiée - CRITIQUE
+L'architecture unifiée mise en place en Phase 1 est **essentielle** pour la Phase 2. Elle permet:
+- De cibler les mêmes éléments SVG avec CSS (IDs fixes)
+- D'appliquer les mêmes animations à tous les personnages
+- De garantir un comportement cohérent
 
-1. **Structure SVG unifiée**: Chaque personnage DOIT avoir exactement la même structure SVG, les mêmes IDs, le même ordre. C'est CRITIQUE pour les animations futures.
+Sans cette architecture, chaque personnage nécessiterait des animations spécifiques.
 
-2. **Pas de compromis sur la cohérence**: Si un accessoire n'est pas utilisé, le groupe existe quand même (vide ou opacity:0). Jamais de structure conditionnelle.
-
-3. **Style South Park**: Toujours des contours noirs épais (2-3px), formes simples, couleurs aplat sans dégradés.
-
-4. **Performance**: Garder les SVG < 10KB et génération < 50ms par personnage.
-
-5. **Testabilité visuelle**: Chaque phase doit produire une démo HTML immédiatement visualisable dans un navigateur.
-
-### Commandes de test
-
-```bash
-# Phase 1
-open character-generator/demo/phase1-demo.html
-
-# Phase 2
-open character-generator/demo/phase2-customizer.html
-
-# Phase 3
-open character-generator/demo/phase3-dancing-room.html
-```
-
-### Structure finale du projet
-
-```
-character-generator/
-├── requirements.md
-├── task.md
-├── README.md
-├── package.json
-├── src/
-│   ├── index.js
-│   ├── core/
-│   │   ├── generator.js
-│   │   ├── customizer.js
-│   │   └── exporter.js
-│   ├── templates/
-│   │   └── svgStructure.js
-│   ├── parts/
-│   │   ├── body.js
-│   │   ├── head.js
-│   │   ├── face.js
-│   │   ├── hair.js
-│   │   ├── clothing.js
-│   │   └── accessories.js
-│   ├── data/
-│   │   └── colors.js
-│   ├── utils/
-│   │   ├── svgBuilder.js
-│   │   └── seededRandom.js
-│   └── react/
-│       ├── index.js
-│       ├── CharacterDisplay.jsx
-│       ├── CharacterAvatar.jsx
-│       ├── CharacterCustomizer.jsx
-│       ├── DancingRoom.jsx
-│       └── hooks.js
-├── demo/
-│   ├── phase1-demo.html
-│   ├── phase2-customizer.html
-│   └── phase3-dancing-room.html
-├── docs/
-│   └── API.md
-└── examples/
-    ├── phase1/
-    ├── phase2/
-    └── phase3/
-```
+### Prochaines étapes possibles
+- Synchronisation de l'animation avec la musique (BPM)
+- Animation réactive au rythme et à l'intensité du son
+- Intégration dans la Dancing Room de l'application principale
+- Génération de plusieurs personnages qui dansent ensemble

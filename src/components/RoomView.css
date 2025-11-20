@@ -27,6 +27,7 @@
   color: white;
   font-family: Arial, sans-serif;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 20; /* Above dance floor */
 }
 
 .visitor-overlay h2 {

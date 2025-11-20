@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateCharacter } from '../../character-generator/src/index.js';
 import { generateRoomSlug } from '../utils/slugGenerator.js';
+import { getUserId } from '../utils/userUtils.js';
 import './Home.css';
 
 function Home() {
@@ -9,16 +10,21 @@ function Home() {
   const [character, setCharacter] = useState(null);
   const [roomCode, setRoomCode] = useState('');
   const navigate = useNavigate();
+  const userId = getUserId();
 
   // Générer un personnage initial au chargement
   useEffect(() => {
-    const initialCharacter = generateCharacter();
+    // Generate a unique seed based on userId + timestamp to ensure consistency
+    const seed = `${userId}-${Date.now()}`;
+    const initialCharacter = generateCharacter({ seed });
     setCharacter(initialCharacter);
-  }, []);
+  }, [userId]);
 
-  // Randomize character
+  // Randomize character with a new seed
   const handleRandomize = () => {
-    const newCharacter = generateCharacter();
+    // Generate a new unique seed for the randomized character
+    const seed = `${userId}-${Date.now()}`;
+    const newCharacter = generateCharacter({ seed });
     setCharacter(newCharacter);
   };
 

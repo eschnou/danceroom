@@ -14,6 +14,46 @@ export function useRealtimeRoom(slug, isDJ = false) {
   const userId = getUserId();
   const nickname = generateNickname();
 
+  // Get avatar seed from localStorage (saved in Home.jsx)
+  const getAvatarSeed = () => {
+    try {
+      const savedCharacter = localStorage.getItem('sunorooms_character');
+      if (savedCharacter) {
+        const character = JSON.parse(savedCharacter);
+        // Use seed (should always exist now since Home.jsx generates with seed)
+        if (character.seed) {
+          return character.seed;
+        }
+        console.warn('[useRealtimeRoom] Character has no seed, using ID as fallback');
+        return character.id;
+      }
+    } catch (error) {
+      console.error('[useRealtimeRoom] Error reading character from localStorage:', error);
+    }
+    // Fallback: generate seed from userId if no character saved
+    console.warn('[useRealtimeRoom] No character found in localStorage, using userId as seed');
+    return `${userId}-fallback`;
+  };
+
+  // Generate random position on the dance floor (lower part of screen)
+  const generateDanceFloorPosition = () => {
+    // Generate position in the lower 40% of the screen (dance floor area)
+    // x: 10% to 90% (avoid edges)
+    // y: 60% to 90% (lower part of screen)
+    return {
+      x: 10 + Math.random() * 80, // 10-90%
+      y: 60 + Math.random() * 30, // 60-90%
+    };
+  };
+
+  // Store position in ref so it doesn't change on re-renders
+  const positionRef = useRef(null);
+  if (!positionRef.current) {
+    positionRef.current = generateDanceFloorPosition();
+  }
+
+  const avatarSeed = getAvatarSeed();
+
   useEffect(() => {
     if (!slug) return;
 
@@ -66,11 +106,13 @@ export function useRealtimeRoom(slug, isDJ = false) {
       if (status === 'SUBSCRIBED') {
         setIsConnected(true);
 
-        // Track our presence
+        // Track our presence with avatar and position
         const presenceData = {
           nickname,
           isDJ,
           joinedAt: Date.now(),
+          avatarSeed,
+          position: positionRef.current,
         };
 
         console.log('[Presence] Tracking:', presenceData);
@@ -118,9 +160,11 @@ export function useRealtimeRoom(slug, isDJ = false) {
       nickname,
       isDJ,
       joinedAt: Date.now(),
+      avatarSeed,
+      position: positionRef.current,
       ...presenceData,
     });
-  }, [nickname, isDJ]);
+  }, [nickname, isDJ, avatarSeed]);
 
   /**
    * Subscribe to a broadcast event

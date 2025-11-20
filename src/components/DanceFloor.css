@@ -1,0 +1,77 @@
+/* DanceFloor container - full screen with positioned avatars */
+.dance-floor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Allow clicks to pass through to background */
+  z-index: 10; /* Above background, below UI controls */
+}
+
+/* Individual avatar container */
+.avatar-container {
+  position: absolute;
+  transform: translate(-50%, -50%); /* Center avatar on position */
+  pointer-events: auto; /* Allow interaction with avatars */
+  transition: all 0.3s ease-out;
+}
+
+/* Avatar display (SVG) */
+.avatar-container .avatar-display {
+  width: 80px;
+  height: 120px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: transform 0.2s ease;
+}
+
+.avatar-container:hover .avatar-display {
+  transform: scale(1.1);
+}
+
+/* Avatar label (nickname) */
+.avatar-label {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatar-container:hover .avatar-label {
+  opacity: 1;
+}
+
+/* DJ avatar special styling */
+.avatar-container.avatar-dj .avatar-display {
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6))
+          drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.avatar-container.avatar-dj .avatar-label {
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #000;
+  font-weight: 600;
+}
+
+/* Ensure avatars scale properly on mobile */
+@media (max-width: 768px) {
+  .avatar-container .avatar-display {
+    width: 60px;
+    height: 90px;
+  }
+
+  .avatar-label {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+}

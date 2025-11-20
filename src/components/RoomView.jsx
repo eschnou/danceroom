@@ -8,6 +8,7 @@ import Participants from './Participants';
 import TrackUploader from './TrackUploader';
 import Playlist from './Playlist';
 import DJControls from './DJControls';
+import DanceFloor from './DanceFloor';
 import './RoomView.css';
 
 function RoomView() {
@@ -277,6 +278,7 @@ function RoomView() {
   if (!isDJ) {
     return (
       <div className="room-visitor">
+        <DanceFloor participants={participants} />
         <div className="visitor-overlay">
           <h2>🎵 SunoRooms</h2>
           <p>
@@ -296,7 +298,9 @@ function RoomView() {
   return (
     <div className="room-dj">
       {/* Left side - Background */}
-      <div className="dj-background"></div>
+      <div className="dj-background">
+        <DanceFloor participants={participants} />
+      </div>
 
       {/* Right side - Control Panel */}
       <div className="dj-panel">

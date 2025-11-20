@@ -28,9 +28,11 @@ function RoomView() {
     currentTrackId,
     currentTime,
     duration,
+    needsUserInteraction,
     playTrack,
     pause,
     stop,
+    enableAudio,
   } = useAudioPlayer();
 
   // Use refs to store audio player functions to avoid useEffect re-runs
@@ -289,6 +291,35 @@ function RoomView() {
             Room: <span className="room-code">{slug}</span>
           </p>
           <p>Participants: {participants.length}</p>
+
+          {needsUserInteraction && (
+            <div style={{
+              marginTop: '20px',
+              padding: '15px',
+              background: 'rgba(255, 193, 7, 0.9)',
+              borderRadius: '10px',
+              color: '#000'
+            }}>
+              <p style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>
+                🔊 Music is playing!
+              </p>
+              <button
+                onClick={enableAudio}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: '#4CAF50',
+                  color: 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                Click to enable sound
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );

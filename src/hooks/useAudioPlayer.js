@@ -8,9 +8,11 @@ export function useAudioPlayer() {
   const [currentTrackId, setCurrentTrackId] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [needsUserInteraction, setNeedsUserInteraction] = useState(false);
 
   const audioRef = useRef(null);
   const syncIntervalRef = useRef(null);
+  const pendingPlayRef = useRef(null); // Store pending play params for user interaction
 
   /**
    * Load and play a track from URL with timestamp synchronization
@@ -80,10 +82,18 @@ export function useAudioPlayer() {
           console.log('[useAudioPlayer] Playback started');
           setIsPlaying(true);
           setCurrentTrackId(trackId);
+          setNeedsUserInteraction(false);
+          pendingPlayRef.current = null;
         })
         .catch((error) => {
-          console.error('[useAudioPlayer] Play failed:', error);
-          alert('Failed to play audio. ' + error.message);
+          console.warn('[useAudioPlayer] Autoplay blocked:', error.message);
+
+          // Store play params for manual trigger
+          pendingPlayRef.current = { trackId, url, startPosition, timestamp };
+          setNeedsUserInteraction(true);
+
+          // Don't show intrusive alert - let UI handle it
+          console.log('[useAudioPlayer] User interaction required to start playback');
         });
     }, { once: true }); // Only fire once
 
@@ -155,15 +165,49 @@ export function useAudioPlayer() {
     }
   }, []);
 
+  /**
+   * Enable audio after user interaction
+   * Retries the pending play if autoplay was blocked
+   */
+  const enableAudio = useCallback(() => {
+    console.log('[useAudioPlayer] User enabled audio');
+    setNeedsUserInteraction(false);
+
+    if (pendingPlayRef.current && audioRef.current) {
+      console.log('[useAudioPlayer] Retrying playback after user interaction');
+
+      // Recalculate synced position
+      const { startPosition, timestamp } = pendingPlayRef.current;
+      const now = Date.now();
+      const offset = (now - timestamp) / 1000;
+      const syncedPosition = startPosition + offset;
+
+      audioRef.current.currentTime = Math.max(0, syncedPosition);
+
+      audioRef.current.play()
+        .then(() => {
+          console.log('[useAudioPlayer] Playback started after user interaction');
+          setIsPlaying(true);
+          setCurrentTrackId(pendingPlayRef.current.trackId);
+          pendingPlayRef.current = null;
+        })
+        .catch((error) => {
+          console.error('[useAudioPlayer] Play still failed after interaction:', error);
+        });
+    }
+  }, []);
+
   return {
     isPlaying,
     currentTrackId,
     currentTime,
     duration,
+    needsUserInteraction,
     playTrack,
     pause,
     resume,
     stop,
     seek,
+    enableAudio,
   };
 }

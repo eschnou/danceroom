@@ -17,10 +17,10 @@ export function generateUUID() {
  * Get or generate a unique user ID stored in localStorage
  */
 export function getUserId() {
-  let userId = localStorage.getItem('sunorooms_user_id');
+  let userId = localStorage.getItem('danceroom_user_id');
   if (!userId) {
     userId = `user_${generateUUID()}`;
-    localStorage.setItem('sunorooms_user_id', userId);
+    localStorage.setItem('danceroom_user_id', userId);
   }
   return userId;
 }
@@ -29,10 +29,10 @@ export function getUserId() {
  * Get or generate a random nickname stored in localStorage
  */
 export function generateNickname() {
-  let nickname = localStorage.getItem('sunorooms_nickname');
+  let nickname = localStorage.getItem('danceroom_nickname');
   if (!nickname) {
     nickname = `User_${Math.floor(Math.random() * 10000)}`;
-    localStorage.setItem('sunorooms_nickname', nickname);
+    localStorage.setItem('danceroom_nickname', nickname);
   }
   return nickname;
 }
@@ -41,6 +41,6 @@ export function generateNickname() {
  * Clear user data from localStorage (useful for testing)
  */
 export function clearUserData() {
-  localStorage.removeItem('sunorooms_user_id');
-  localStorage.removeItem('sunorooms_nickname');
+  localStorage.removeItem('danceroom_user_id');
+  localStorage.removeItem('danceroom_nickname');
 }

@@ -45,7 +45,7 @@ function Home() {
 
     // Sauvegarder le character
     if (character) {
-      localStorage.setItem('sunorooms_character', JSON.stringify(character));
+      localStorage.setItem('danceroom_character', JSON.stringify(character));
     }
 
     // Naviguer vers la room en mode DJ
@@ -60,7 +60,7 @@ function Home() {
 
       // Sauvegarder le character
       if (character) {
-        localStorage.setItem('sunorooms_character', JSON.stringify(character));
+        localStorage.setItem('danceroom_character', JSON.stringify(character));
       }
 
       // Naviguer vers la room
@@ -71,7 +71,7 @@ function Home() {
   return (
     <div className="home-container">
       <div className="home-content">
-        <h1 className="home-title">🎵 SunoRooms</h1>
+        <h1 className="home-title">🎵 Danceroom</h1>
         <p className="home-subtitle">Listen to music together in sync</p>
 
         {/* Progress indicator */}

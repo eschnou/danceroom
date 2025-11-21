@@ -1,10 +1,10 @@
-# 🎵 SunoRooms
+# 🎵 Danceroom
 
 > **Listen to music together, in perfect sync** 🎧
 
 A real-time multiplayer music room where you can create unique avatars, join virtual dance floors, and enjoy synchronized music playback with friends. Built during the Vibe Coding Fight Club.
 
-![SunoRooms Demo](./demo.png)
+![Danceroom Demo](./demo.png)
 
 ## ✨ Features
 
@@ -46,8 +46,8 @@ A real-time multiplayer music room where you can create unique avatars, join vir
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/sunorooms.git
-   cd sunorooms
+   git clone https://github.com/yourusername/danceroom.git
+   cd danceroom
    ```
 
 2. **Install dependencies**
@@ -119,7 +119,7 @@ A real-time multiplayer music room where you can create unique avatars, join vir
 ## 📂 Project Structure
 
 ```
-sunorooms/
+danceroom/
 ├── src/
 │   ├── components/         # React components
 │   │   ├── Home.jsx       # Character creation & room join
@@ -176,7 +176,7 @@ All animations are CSS-based and run at 2x slower speed for smooth, groovy movem
 
 This project was built in **4 hours** during the **Vibe Coding Fight Club** hackathon organized by [ClubAI](https://www.clubai.site/).
 
-The challenge was to create a unique multiplayer experience combining real-time collaboration, audio synchronization, and creative visual elements. SunoRooms brings people together through music, dance, and procedurally generated avatars!
+The challenge was to create a unique multiplayer experience combining real-time collaboration, audio synchronization, and creative visual elements. Danceroom brings people together through music, dance, and procedurally generated avatars!
 
 ## 👥 Authors
 
@@ -195,7 +195,7 @@ Contributions are welcome! Feel free to:
 
 MIT License
 
-Copyright (c) 2025 SunoRooms
+Copyright (c) 2025 Danceroom
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

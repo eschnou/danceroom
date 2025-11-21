@@ -282,7 +282,7 @@ function RoomView() {
       <div className="room-visitor">
         <DanceFloor participants={participants} isPlaying={isPlaying} />
         <div className="visitor-overlay">
-          <h2>🎵 SunoRooms</h2>
+          <h2>🎵 Danceroom</h2>
           <p>
             <span className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}></span>
             {isConnected ? 'Connected' : 'Connecting...'}
@@ -338,7 +338,7 @@ function RoomView() {
         {/* Panel Header */}
         <div className="dj-panel-header">
           <h1>
-            🎵 SunoRooms
+            🎵 Danceroom
             <span className="dj-badge">DJ</span>
           </h1>
           <div className="room-info">

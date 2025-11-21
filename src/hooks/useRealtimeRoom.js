@@ -17,7 +17,7 @@ export function useRealtimeRoom(slug, isDJ = false) {
   // Get avatar seed from localStorage (saved in Home.jsx)
   const getAvatarSeed = () => {
     try {
-      const savedCharacter = localStorage.getItem('sunorooms_character');
+      const savedCharacter = localStorage.getItem('danceroom_character');
       if (savedCharacter) {
         const character = JSON.parse(savedCharacter);
         // Use seed (should always exist now since Home.jsx generates with seed)
